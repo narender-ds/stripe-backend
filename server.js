@@ -93,6 +93,14 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
+
+app.get("/connection-made",async (req,res)=>
+{
+  res.json({
+status:200,
+message:"Connected Successfully."
+  });})
+
 app.post("/payment-sheet", async (req, res) => {
   console.log("req", req.body.grandTotal);
   console.log("req.cUSTOMER", req.body.billingAddress);
