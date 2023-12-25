@@ -71,33 +71,33 @@
 // app.listen(port, () => {
 //   console.log(`Server is running on port ${port}`);
 // });
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const stripe = require('stripe')(
-  'sk_test_51OHN0eSImdOPVCehYkC9PLLY7b447zozju3uYgYd96Hw50GMdWGujjvJRHmb9rw10MUAue0HpglVzs5j8nexixIi00CE5E7SVd',
-);
+const express = require("express");
+const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+dotenv.config();
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 5000;
 
 // Define corsOptions
-const corsOptions = {
-  origin: 'http://192.168.9.113',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
+// const corsOptions = {
+//   origin: 'http://192.168.9.113',
+//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//   credentials: true,
+//   optionsSuccessStatus: 204,
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(bodyParser.json());
 
-app.post('/payment-sheet', async (req, res) => {
-  console.log('req', req.body.grandTotal);
-  console.log('req.cUSTOMER', req.body.billingAddress);
+app.post("/payment-sheet", async (req, res) => {
+  console.log("req", req.body.grandTotal);
+  console.log("req.cUSTOMER", req.body.billingAddress);
   const grandTotalInCents = Math.round(req.body.grandTotal * 100);
-  const {firstName, lastName, email, address, city, zipCode, country} =
+  const { firstName, lastName, email, address, city, zipCode, country } =
     req.body.billingAddress;
 
   const customer = await stripe.customers.create({
@@ -111,12 +111,12 @@ app.post('/payment-sheet', async (req, res) => {
     },
   });
   const ephemeralKey = await stripe.ephemeralKeys.create(
-    {customer: customer.id},
-    {apiVersion: '2023-10-16'},
+    { customer: customer.id },
+    { apiVersion: "2023-10-16" }
   );
   const paymentIntent = await stripe.paymentIntents.create({
     amount: grandTotalInCents,
-    currency: 'INR',
+    currency: "INR",
     customer: customer.id,
     automatic_payment_methods: {
       enabled: true,
@@ -126,8 +126,6 @@ app.post('/payment-sheet', async (req, res) => {
     clientSecret: paymentIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
     customer: customer.id,
-    publishableKey:
-      'pk_test_51OHN0eSImdOPVCehCs7vpOxzj7iSMmnBjENI8AGXvynJO8gHIV1VVTEfdyNAUbxIquULPgVPcvqyWOopFU1ZQj2K00z9msofrq',
   });
 });
 
